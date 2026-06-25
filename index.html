@@ -29,7 +29,7 @@
     -webkit-text-size-adjust:100%;
   }
   header{
-    position:sticky; top:0; z-index:10;
+    position:relative; z-index:1;
     background:linear-gradient(180deg,var(--accent2),#094f45);
     padding:12px 16px 14px; border-bottom:1px solid var(--line);
   }
@@ -69,6 +69,13 @@
   .amount-box .val{font-size:38px;font-weight:800;line-height:1; word-break:break-all;text-align:right}
   .amount-box .val.placeholder{color:#4a5365}
   .amount-jpy{text-align:right;color:var(--sub);font-size:12px;margin:4px 6px 0}
+
+  .step{font-size:12px;color:var(--sub);font-weight:700;margin:14px 2px 6px}
+  .step:first-child{margin-top:2px}
+  .inputzone .amount-box{
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 6px 16px rgba(0,0,0,.5);
+  }
 
   .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
   .cat{
@@ -138,6 +145,19 @@
   .backup-note{font-size:11px;color:var(--sub);text-align:center;margin-top:8px;line-height:1.6}
   .backup-note b{color:var(--gold);font-weight:700}
 
+  .autobk-row{display:flex;align-items:center;gap:12px;margin-top:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+  .autobk-row>div:first-child{flex:1;min-width:0}
+  .abk-title{font-size:13px;font-weight:700}
+  .abk-title span{font-size:11px;color:var(--sub);font-weight:700;margin-left:4px}
+  .abk-sub{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.45}
+  .toggle{width:50px;height:30px;border-radius:30px;background:var(--card2);
+    border:1px solid var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s}
+  .toggle .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+    background:#6b7385;transition:.15s}
+  .toggle.on{background:var(--accent2);border-color:var(--accent)}
+  .toggle.on .knob{left:25px;background:#fff}
+
   /* income modal */
   .modal{
     position:fixed;inset:0;z-index:60;display:none;
@@ -197,23 +217,27 @@
 </header>
 
 <div class="section">
-  <div class="amount-box">
-    <span class="cur">NT$</span>
-    <span class="val placeholder" id="amountVal">0</span>
-  </div>
-  <div class="amount-jpy" id="amountJpy">≈ ¥0</div>
-
+  <div class="step">① カテゴリ</div>
   <div class="cats" id="cats"></div>
 
   <input class="memo" id="memo" type="text" placeholder="メモ（店名・内容など 任意）" autocomplete="off">
 
-  <div class="keypad" id="keypad">
-    <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
-    <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
-    <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
-    <div class="key fn" data-k="00">00</div><div class="key" data-k="0">0</div><div class="key fn" data-k="del">⌫</div>
+  <div class="step">② 金額を入力</div>
+  <div class="inputzone">
+    <div class="amount-box">
+      <span class="cur">NT$</span>
+      <span class="val placeholder" id="amountVal">0</span>
+    </div>
+    <div class="amount-jpy" id="amountJpy">≈ ¥0</div>
+
+    <div class="keypad" id="keypad">
+      <div class="key" data-k="1">1</div><div class="key" data-k="2">2</div><div class="key" data-k="3">3</div>
+      <div class="key" data-k="4">4</div><div class="key" data-k="5">5</div><div class="key" data-k="6">6</div>
+      <div class="key" data-k="7">7</div><div class="key" data-k="8">8</div><div class="key" data-k="9">9</div>
+      <div class="key fn" data-k="00">00</div><div class="key" data-k="0">0</div><div class="key fn" data-k="del">⌫</div>
+    </div>
+    <button class="add-btn" id="addBtn" disabled>記録する</button>
   </div>
-  <button class="add-btn" id="addBtn" disabled>記録する</button>
 </div>
 
 <div class="section">
@@ -229,6 +253,15 @@
     <button id="restoreBtn">↩️ 復元（読み込み）</button>
   </div>
   <div class="backup-note" id="backupNote"></div>
+
+  <div class="autobk-row">
+    <div>
+      <div class="abk-title">記録ごとに自動バックアップ <span id="autoBkState">OFF</span></div>
+      <div class="abk-sub">ONにすると、記録・削除のたびにバックアップを自動保存します（保存先フォルダにファイルが溜まります。最新の1つを残せばOK）。</div>
+    </div>
+    <div class="toggle" id="autoBkToggle"><span class="knob"></span></div>
+  </div>
+
   <div class="bar">
     <button id="csvBtn">CSV書き出し</button>
     <button id="clearBtn">全データ削除</button>
@@ -245,7 +278,8 @@
       ・データはこの端末（ブラウザ）に自動保存。アプリ/サーバー不要・オフラインでも動きます。<br>
       ・iPhoneは Safari の共有 →「ホーム画面に追加」でアプリのように使えます。<br>
       <b style="color:var(--gold)">・データを残すには「バックアップ保存」</b>：記録をJSONファイルに書き出します。これを OneDrive の台湾フォルダ等に置けば、ブラウザのデータを消しても・別端末でも「復元（読み込み）」で元に戻せます。<br>
-      ・旅行中は1日1回くらいバックアップ保存しておくと安心です。
+      ・旅行中は1日1回くらいバックアップ保存しておくと安心です。<br>
+      ・<b style="color:var(--gold)">「記録ごとに自動バックアップ」をON</b>にすると、記録のたびに自動でファイル保存され、保存し忘れません（保存先フォルダにファイルが増えますが、復元には最新の1つがあればOK）。
     </div>
   </details>
 </div>
@@ -278,7 +312,7 @@
 <script>
 (function(){
   "use strict";
-  var LS_DATA="tw_expenses_v1", LS_RATE="tw_rate_v1", LS_BK="tw_lastbackup_v1";
+  var LS_DATA="tw_expenses_v1", LS_RATE="tw_rate_v1", LS_BK="tw_lastbackup_v1", LS_AUTOBK="tw_autobackup_v1";
   var CATS=[
     {id:"food",   emo:"🍜", nm:"食事"},
     {id:"drink",  emo:"🧋", nm:"飲物・茶"},
@@ -296,6 +330,7 @@
   function catOf(id){for(var i=0;i<CATS.length;i++)if(CATS[i].id===id)return CATS[i];return CATS[CATS.length-1];}
 
   var data=load(), rate=loadRate();
+  var autoBk=(localStorage.getItem(LS_AUTOBK)==="1");
   var amount="", selCat="food";
 
   var $=function(s){return document.querySelector(s);};
@@ -318,6 +353,7 @@
       el.addEventListener("click",function(){
         selCat=cat.id;
         document.querySelectorAll(".cat").forEach(function(x){x.classList.toggle("sel",x.dataset.id===selCat);});
+        renderAmount();
       });
       c.appendChild(el);
     });
@@ -342,9 +378,14 @@
   $("#addInBtn").addEventListener("click",openIn);
   $("#csvBtn").addEventListener("click",exportCsv);
   $("#clearBtn").addEventListener("click",clearAll);
-  $("#backupBtn").addEventListener("click",backup);
+  $("#backupBtn").addEventListener("click",function(){backup(false);});
   $("#restoreBtn").addEventListener("click",function(){$("#restoreFile").click();});
   $("#restoreFile").addEventListener("change",restore);
+  $("#autoBkToggle").addEventListener("click",function(){
+    setAutoBk(!autoBk);
+    if(autoBk){ toast("自動バックアップ ON"); backup(true); }
+    else toast("自動バックアップ OFF");
+  });
 
   // income modal
   var inModal=$("#inModal"), inAmt=$("#inAmt"), inRate=$("#inRate"),
@@ -373,6 +414,7 @@
     save(); closeIn(); renderAll();
     toast("入金 NT$ "+n.toLocaleString()+" を追加 ✓");
     if(navigator.vibrate)navigator.vibrate(15);
+    autoBackupIfOn();
     window.scrollTo({top:0,behavior:"smooth"});
   });
 
@@ -387,23 +429,26 @@
     renderAmount(); renderAll();
     toast("記録しました ✓");
     if(navigator.vibrate)navigator.vibrate(15);
+    autoBackupIfOn();
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
   function delEntry(id){
     data=data.filter(function(x){return x.id!==id;});
-    save(); renderAll();
+    save(); renderAll(); autoBackupIfOn();
   }
 
   function renderAmount(){
     if(amount===""){
       amountVal.textContent="0"; amountVal.classList.add("placeholder");
       amountJpy.textContent="≈ ¥0"; addBtn.disabled=true;
+      addBtn.textContent="記録する";
     }else{
       var n=parseInt(amount,10);
       amountVal.textContent=n.toLocaleString("en-US");
       amountVal.classList.remove("placeholder");
       amountJpy.textContent="≈ "+yen(n*rate); addBtn.disabled=false;
+      addBtn.textContent="記録する　"+catOf(selCat).nm+" NT$ "+n.toLocaleString();
     }
   }
 
@@ -490,17 +535,30 @@
     toast("CSVを書き出しました");
   }
 
-  function backup(){
-    if(data.length===0){toast("データがありません");return;}
-    var payload={app:"tw_expense", version:1, exportedAt:new Date().toISOString(), rate:rate, data:data};
+  function backup(auto){
+    if(data.length===0){ if(!auto)toast("データがありません"); return; }
+    var d=new Date();
+    var payload={app:"tw_expense", version:1, exportedAt:d.toISOString(), rate:rate, data:data};
     var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     var a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
-    a.download="台湾支出_バックアップ_"+ymd(new Date())+".json";
+    var stamp=ymd(d)+"_"+pad(d.getHours())+pad(d.getMinutes());
+    a.download=(auto?"台湾支出_自動_":"台湾支出_バックアップ_")+stamp+".json";
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     try{localStorage.setItem(LS_BK,String(Date.now()));}catch(e){}
     renderBackupNote();
-    toast("バックアップを保存しました");
+    toast(auto?"自動バックアップ保存 💾":"バックアップを保存しました");
+  }
+
+  // 記録のたびに自動バックアップ（トグルON時）。タップ操作中に呼ぶのでDLが許可される。
+  function autoBackupIfOn(){
+    if(autoBk && data.length>0) backup(true);
+  }
+  function setAutoBk(on){
+    autoBk=on;
+    try{localStorage.setItem(LS_AUTOBK, on?"1":"0");}catch(e){}
+    var t=$("#autoBkToggle"); if(t)t.classList.toggle("on",on);
+    var s=$("#autoBkState"); if(s)s.textContent=on?"ON":"OFF";
   }
 
   function restore(ev){
@@ -554,7 +612,7 @@
   function loadRate(){var v=parseFloat(localStorage.getItem(LS_RATE));return(!isNaN(v)&&v>0)?v:4.8;}
   function saveRate(){try{localStorage.setItem(LS_RATE,String(rate));}catch(e){}}
 
-  renderAmount(); renderAll(); renderBackupNote();
+  renderAmount(); renderAll(); renderBackupNote(); setAutoBk(autoBk);
 })();
 </script>
 </body>
