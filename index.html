@@ -46,6 +46,10 @@
   .hero .remain{font-size:34px;font-weight:800;letter-spacing:.4px;line-height:1.05;margin-top:2px}
   .hero .remain.neg{color:#ffd5d5}
   .hero .remainJpy{font-size:13px;color:#bfe9e0;margin-top:2px}
+  .hero.cardbox{margin-top:8px;background:rgba(150,130,255,.16)}
+  .hero.cardbox .lbl{color:#d9d2ff}
+  .hero.cardbox .remain{font-size:26px}
+  .hero.cardbox .remainJpy{color:#cfc7f5}
   .addin{
     background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
     color:#fff;border-radius:30px;font-size:13px;font-weight:700;
@@ -76,6 +80,17 @@
     position:sticky; top:0; z-index:20;
     box-shadow:0 6px 16px rgba(0,0,0,.5);
   }
+
+  .pays{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .pay{
+    background:var(--card2);border:1px solid var(--line);border-radius:14px;
+    padding:11px 6px;text-align:center;cursor:pointer;user-select:none;font-weight:700;font-size:15px;
+    transition:transform .05s, border-color .1s, background .1s;
+  }
+  .pay:active{transform:scale(.97)}
+  .pay .paysub{display:block;font-size:10px;font-weight:600;color:var(--sub);margin-top:2px}
+  .pay[data-pay="cash"].sel{border-color:var(--accent);background:#143b35}
+  .pay[data-pay="card"].sel{border-color:#9a86ff;background:#241f3d}
 
   .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
   .cat{
@@ -120,6 +135,8 @@
     border:1px solid var(--line);border-radius:13px;padding:10px 12px;margin-bottom:7px;
   }
   .item.in{background:#10271f;border-color:#1e4d3a}
+  .item.card{border-left:3px solid #9a86ff}
+  .item .paytag{font-size:10px;font-weight:700;color:#b7a9ff;margin-left:4px}
   .item .emo{font-size:21px;width:26px;text-align:center}
   .item .mid{flex:1;min-width:0}
   .item .nm{font-size:14px;font-weight:600}
@@ -203,16 +220,21 @@
   </div>
   <div class="hero">
     <div class="top">
-      <span class="lbl">財布の残り</span>
+      <span class="lbl">💵 現金の残り</span>
       <button class="addin" id="addInBtn">＋ 両替・入金</button>
     </div>
     <div class="remain" id="remainTwd">NT$ 0</div>
     <div class="remainJpy" id="remainJpy">≈ ¥0</div>
   </div>
+  <div class="hero cardbox">
+    <div class="top"><span class="lbl">💳 カード利用 合計</span></div>
+    <div class="remain" id="cardTwd">NT$ 0</div>
+    <div class="remainJpy" id="cardJpy">≈ ¥0</div>
+  </div>
   <div class="totals3">
-    <div class="t3"><div class="l">入金合計</div><div class="v" id="inTwd">NT$ 0</div></div>
-    <div class="t3"><div class="l">使った合計</div><div class="v" id="spentTwd">NT$ 0</div></div>
-    <div class="t3"><div class="l">今日使った</div><div class="v" id="todayTwd">NT$ 0</div></div>
+    <div class="t3"><div class="l">現金 入金</div><div class="v" id="inTwd">NT$ 0</div></div>
+    <div class="t3"><div class="l">現金 支出</div><div class="v" id="spentTwd">NT$ 0</div></div>
+    <div class="t3"><div class="l">今日の支出</div><div class="v" id="todayTwd">NT$ 0</div></div>
   </div>
 </header>
 
@@ -222,7 +244,13 @@
 
   <input class="memo" id="memo" type="text" placeholder="メモ（店名・内容など 任意）" autocomplete="off">
 
-  <div class="step">② 金額を入力</div>
+  <div class="step">② 支払い方法</div>
+  <div class="pays" id="pays">
+    <div class="pay sel" data-pay="cash">💵 現金<span class="paysub">残高から引く</span></div>
+    <div class="pay" data-pay="card">💳 カード<span class="paysub">別で集計</span></div>
+  </div>
+
+  <div class="step">③ 金額を入力</div>
   <div class="inputzone">
     <div class="amount-box">
       <span class="cur">NT$</span>
@@ -271,8 +299,9 @@
   <details>
     <summary>使い方 / データについて</summary>
     <div style="font-size:12px;color:var(--sub);line-height:1.7;padding:4px 2px">
-      ・まず「＋両替・入金」で財布に入れた金額を登録 → 使うたびに残りが減ります。<br>
-      ・支出は 金額入力 → カテゴリ選択 → 「記録する」。<br>
+      ・まず「＋両替・入金」で財布に入れた金額を登録 → 現金で使うたびに残りが減ります。<br>
+      ・支出は カテゴリ → 支払い方法（現金／カード）→ 金額 → 「記録する」。<br>
+      ・<b style="color:#b7a9ff">💳カード払い</b>は現金残高から引かれず、「カード利用 合計」に別で集計されます。<br>
       ・追加で両替/ATMしたら、また「＋両替・入金」で足せます。<br>
       ・両替時に「レート」も入力でき、各入金ごとに実レートで円換算します（以降の表示レートにも反映）。<br>
       ・データはこの端末（ブラウザ）に自動保存。アプリ/サーバー不要・オフラインでも動きます。<br>
@@ -331,7 +360,7 @@
 
   var data=load(), rate=loadRate();
   var autoBk=(localStorage.getItem(LS_AUTOBK)==="1");
-  var amount="", selCat="food";
+  var amount="", selCat="food", selPay="cash";
 
   var $=function(s){return document.querySelector(s);};
   var amountVal=$("#amountVal"), amountJpy=$("#amountJpy"),
@@ -358,6 +387,13 @@
       c.appendChild(el);
     });
   })();
+
+  $("#pays").addEventListener("click",function(e){
+    var p=e.target.closest(".pay"); if(!p)return;
+    selPay=p.dataset.pay;
+    document.querySelectorAll(".pay").forEach(function(x){x.classList.toggle("sel",x.dataset.pay===selPay);});
+    renderAmount();
+  });
 
   rateInput.value=rate;
   rateInput.addEventListener("change",function(){
@@ -422,7 +458,7 @@
     var n=parseInt(amount,10);
     if(!n||n<=0){toast("金額を入力してください");return;}
     data.push({
-      id:uid(), type:"spend", twd:n, cat:selCat, memo:memo.value.trim(), ts:Date.now()
+      id:uid(), type:"spend", twd:n, cat:selCat, pay:selPay, memo:memo.value.trim(), ts:Date.now()
     });
     save();
     amount=""; memo.value="";
@@ -448,25 +484,30 @@
       amountVal.textContent=n.toLocaleString("en-US");
       amountVal.classList.remove("placeholder");
       amountJpy.textContent="≈ "+yen(n*rate); addBtn.disabled=false;
-      addBtn.textContent="記録する　"+catOf(selCat).nm+" NT$ "+n.toLocaleString();
+      var pico=(selPay==="card")?"💳 ":"💵 ";
+      addBtn.textContent="記録する　"+pico+catOf(selCat).nm+" NT$ "+n.toLocaleString();
     }
   }
 
   function isIn(x){return x.type==="in";}
+  function isCard(x){return x.type==="spend" && x.pay==="card";}
 
   function renderAll(){
-    var totalIn=0, totalSpent=0, today=0, t0=startOfToday();
+    var totalIn=0, cashSpent=0, cardSpent=0, today=0, t0=startOfToday();
     data.forEach(function(x){
-      if(isIn(x)) totalIn+=x.twd;
-      else { totalSpent+=x.twd; if(x.ts>=t0)today+=x.twd; }
+      if(isIn(x)){ totalIn+=x.twd; return; }
+      if(isCard(x)) cardSpent+=x.twd; else cashSpent+=x.twd;
+      if(x.ts>=t0) today+=x.twd;
     });
-    var remain=totalIn-totalSpent;
+    var remain=totalIn-cashSpent;
     var rEl=$("#remainTwd");
     rEl.textContent="NT$ "+remain.toLocaleString();
     rEl.classList.toggle("neg",remain<0);
     $("#remainJpy").textContent="≈ "+yen(remain*rate);
+    $("#cardTwd").textContent="NT$ "+cardSpent.toLocaleString();
+    $("#cardJpy").textContent="≈ "+yen(cardSpent*rate);
     $("#inTwd").textContent="NT$ "+totalIn.toLocaleString();
-    $("#spentTwd").textContent="NT$ "+totalSpent.toLocaleString();
+    $("#spentTwd").textContent="NT$ "+cashSpent.toLocaleString();
     $("#todayTwd").textContent="NT$ "+today.toLocaleString();
 
     if(data.length===0){ listEl.innerHTML='<div class="empty">まだ記録がありません。<br>まず「＋両替・入金」で財布の金額を登録しましょう。</div>'; return; }
@@ -479,9 +520,11 @@
     });
     var html="";
     order.forEach(function(k){
-      var items=groups[k], spent=0;
-      items.forEach(function(x){if(!isIn(x))spent+=x.twd;});
-      html+='<div class="daygroup"><div class="dayhead"><span class="d">'+k+'</span><span class="s">使った NT$ '+spent.toLocaleString()+' ・ '+yen(spent*rate)+'</span></div>';
+      var items=groups[k], dCash=0, dCard=0;
+      items.forEach(function(x){ if(isIn(x))return; if(isCard(x))dCard+=x.twd; else dCash+=x.twd; });
+      var dsum='現金 NT$ '+dCash.toLocaleString();
+      if(dCard>0) dsum+=' ・ 💳 NT$ '+dCard.toLocaleString();
+      html+='<div class="daygroup"><div class="dayhead"><span class="d">'+k+'</span><span class="s">'+dsum+'</span></div>';
       items.forEach(function(x){
         var tm=new Date(x.ts), hm=pad(tm.getHours())+":"+pad(tm.getMinutes());
         if(isIn(x)){
@@ -496,9 +539,11 @@
             '<span class="del" data-id="'+x.id+'">✕</span></div>';
         }else{
           var c=catOf(x.cat);
-          html+='<div class="item">'+
+          var card=isCard(x);
+          var tag=card?'<span class="paytag">💳カード</span>':'';
+          html+='<div class="item'+(card?' card':'')+'">'+
             '<span class="emo">'+c.emo+'</span>'+
-            '<div class="mid"><div class="nm">'+c.nm+'</div>'+
+            '<div class="mid"><div class="nm">'+c.nm+tag+'</div>'+
             '<div class="mm">'+hm+(x.memo?'　'+esc(x.memo):'')+'</div></div>'+
             '<div class="amt"><div class="t">NT$ '+x.twd.toLocaleString()+'</div>'+
             '<div class="j">'+yen(x.twd*rate)+'</div></div>'+
@@ -517,12 +562,12 @@
 
   function exportCsv(){
     if(data.length===0){toast("データがありません");return;}
-    var rows=[["日時","区分","カテゴリ","NT$","レート(円/NT$)","円(概算)","メモ"]];
+    var rows=[["日時","区分","支払方法","カテゴリ","NT$","レート(円/NT$)","円(概算)","メモ"]];
     data.slice().sort(function(a,b){return a.ts-b.ts;}).forEach(function(x){
       var d=new Date(x.ts);
       var dt=d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
-      if(isIn(x)){var ir=(x.rate>0)?x.rate:rate; rows.push([dt,"入金","両替・入金",x.twd,ir,Math.round(x.twd*ir),x.memo]);}
-      else rows.push([dt,"支出",catOf(x.cat).nm,x.twd,rate,Math.round(x.twd*rate),x.memo]);
+      if(isIn(x)){var ir=(x.rate>0)?x.rate:rate; rows.push([dt,"入金","現金","両替・入金",x.twd,ir,Math.round(x.twd*ir),x.memo]);}
+      else rows.push([dt,"支出",(isCard(x)?"カード":"現金"),catOf(x.cat).nm,x.twd,rate,Math.round(x.twd*rate),x.memo]);
     });
     var csv="﻿"+rows.map(function(r){
       return r.map(function(c){var s=String(c);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(",");
